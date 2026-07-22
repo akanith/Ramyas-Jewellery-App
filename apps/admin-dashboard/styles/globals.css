@@ -1,0 +1,16 @@
+/* ============================================================
+   Admin Dashboard — Global Styles
+   Base Tailwind CSS directives + design token overrides.
+   Full implementation in UI phase.
+   ============================================================ */
+
+@import "tailwindcss";
+
+/* 
+   Design tokens will be defined here:
+   - Color palette (primary gold, neutrals, semantic)
+   - Typography scale
+   - Spacing overrides
+   - Border radius defaults
+   - Box shadow presets
+*/
