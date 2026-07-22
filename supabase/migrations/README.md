@@ -1,0 +1,22 @@
+-- ============================================================
+-- Migrations Directory
+-- ============================================================
+-- SQL migration files are stored here in the format:
+--   YYYYMMDDHHMMSS_description.sql
+--
+-- Each file is a forward-only migration.
+-- Never edit an existing migration after it has been applied.
+-- Instead, create a new migration to make corrections.
+--
+-- Planned migration order:
+--   001 — enable UUID extension
+--   002 — create profiles table
+--   003 — create scheme_plans table
+--   004 — create scheme_members table
+--   005 — create payments table
+--   006 — create redemptions table
+--   007 — create notifications table
+--   008 — enable Row Level Security on all tables
+--   009 — create updated_at auto-trigger function
+--   010 — create realtime publication config
+-- ============================================================
