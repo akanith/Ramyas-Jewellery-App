@@ -156,6 +156,8 @@ export default function RecordPaymentModal({ open, onClose, onSuccess }: RecordP
       amount: amountVal,
       method: method === "Transfer" ? "Bank Transfer" : method,
       date: paymentDate,
+      installmentNumber: nextInstNumber,
+      totalInstallments: selectedCustomer.totalInstallments || 12,
       status: "RECORDED",
     });
 

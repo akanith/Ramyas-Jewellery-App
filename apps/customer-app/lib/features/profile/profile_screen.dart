@@ -118,7 +118,7 @@ class ProfileScreen extends ConsumerWidget {
                       const SizedBox(height: 14),
 
                       // Scheme Pill Chip
-                      StatusChip.schemePill(label: 'SWARNA LAKSHMI SCHEME'),
+                      StatusChip.schemePill(label: 'DIWALI SAVINGS SCHEME'),
                     ],
                   ),
                 ),

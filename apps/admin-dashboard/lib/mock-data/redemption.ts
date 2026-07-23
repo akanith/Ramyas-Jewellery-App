@@ -1,51 +1,52 @@
 // ============================================================
-// Mock Data — Redemption Records
+// Mock Data — Redemption & Settlement
 // ============================================================
-
-export type RedemptionStatus =
-  | "pending_approval"
-  | "completed"
-  | "cancelled";
 
 export interface RedemptionRecord {
   id: string;
   customerId: string;
   customerName: string;
   scheme: string;
-  totalPaidAmount: number;
-  shopBonus: number;
-  netEligibleValue: number;
-  billNumber?: string;
-  billAmount?: number;
-  jewelleryCategory?: string;
-  balancePaid?: number;
-  sweetBoxGiven: boolean;
-  festivalGiftGiven: boolean;
-  remarks?: string;
-  completedDate?: string;
-  status: RedemptionStatus;
-  processedBy: string;
+  totalPaidAmount: number; // e.g. 12,000
+  shopBonus: number; // e.g. 1,000
+  netEligibleValue: number; // e.g. 13,000
+  goldRateAtMaturity: number; // e.g. 6,850 per gram
+  equivalentGoldGrams: number; // e.g. 1.897g
+  status: "pending_approval" | "approved" | "redeemed" | "cancelled";
+  redemptionType?: "gold_ornament" | "gold_coin" | "cash_voucher";
+  maturedDate: string;
+  redeemedDate?: string;
+  approvedBy?: string;
 }
 
 export const redemptionRecords: RedemptionRecord[] = [
   {
-    id: "RDM-2023-001",
-    customerId: "RJ-2023-009",
-    customerName: "Meera Lakshmi",
-    scheme: "Gold Savings",
+    id: "RDM-2023-441",
+    customerId: "RJ-2023-441",
+    customerName: "Ananya Sharma",
+    scheme: "Diwali Savings Scheme",
     totalPaidAmount: 12000,
     shopBonus: 1000,
     netEligibleValue: 13000,
-    billNumber: "INV-8829",
-    billAmount: 28500,
-    jewelleryCategory: "Wedding Set",
-    balancePaid: 15500,
-    sweetBoxGiven: true,
-    festivalGiftGiven: false,
-    remarks: "Customer chose a wedding jewellery set. Very happy with the scheme.",
-    completedDate: "Aug 20, 2023",
-    status: "completed",
-    processedBy: "Owner",
+    goldRateAtMaturity: 6850,
+    equivalentGoldGrams: 1.897,
+    status: "approved",
+    redemptionType: "gold_ornament",
+    maturedDate: "2023-09-01",
+    approvedBy: "Rajesh Kumar (Owner)",
+  },
+  {
+    id: "RDM-2023-602",
+    customerId: "RJ-2023-602",
+    customerName: "Priya Mehta",
+    scheme: "Diwali Savings Scheme",
+    totalPaidAmount: 60000,
+    shopBonus: 5000,
+    netEligibleValue: 65000,
+    goldRateAtMaturity: 6850,
+    equivalentGoldGrams: 9.489,
+    status: "pending_approval",
+    maturedDate: "2023-09-10",
   },
 ];
 
@@ -59,27 +60,11 @@ export const getPendingRedemptions = (): RedemptionRecord[] =>
 
 export const schemeOptions = [
   {
-    id: "swarna-nidhi",
-    name: "Swarna Nidhi",
+    id: "diwali-savings-scheme",
+    name: "Diwali Savings Scheme",
     monthlyAmount: 1000,
     duration: 12,
     bonusAmount: 1000,
-    description: "12-month gold accumulation plan with ₹1,000 bonus",
-  },
-  {
-    id: "diamond-monthly",
-    name: "Diamond Monthly",
-    monthlyAmount: 2000,
-    duration: 12,
-    bonusAmount: 2000,
-    description: "Premium 12-month plan with higher bonus",
-  },
-  {
-    id: "gold-savings",
-    name: "Gold Savings",
-    monthlyAmount: 1000,
-    duration: 12,
-    bonusAmount: 1000,
-    description: "Flexible gold savings scheme",
+    description: "12-month Diwali gold accumulation scheme with 1 month bonus",
   },
 ];

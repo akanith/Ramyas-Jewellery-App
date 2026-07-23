@@ -39,7 +39,7 @@ export default function SettingsPage() {
   const [gstNumber, setGstNumber] = useState("33AAAAA0000A1Z5");
 
   // Scheme Config state
-  const [defaultScheme, setDefaultScheme] = useState("Swarna Nidhi");
+  const [defaultScheme, setDefaultScheme] = useState("Diwali Savings Scheme");
   const [monthlyInstallment, setMonthlyInstallment] = useState("1000");
   const [totalDuration, setTotalDuration] = useState("12");
   const [shopBonus, setShopBonus] = useState("1000");
@@ -308,8 +308,6 @@ export default function SettingsPage() {
                   onChange={(e) => setDefaultScheme(e.target.value)}
                   className="w-full px-3.5 py-2 border border-stone-200 rounded-xl text-xs text-stone-900 font-semibold bg-white focus:outline-none focus:ring-2 focus:ring-primary/20"
                 >
-                  <option value="Swarna Nidhi">Swarna Nidhi</option>
-                  <option value="Diamond Monthly">Diamond Monthly</option>
                   <option value="Diwali Savings Scheme">Diwali Savings Scheme</option>
                 </select>
               </div>

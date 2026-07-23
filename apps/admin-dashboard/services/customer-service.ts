@@ -4,7 +4,7 @@ import { type CustomerRow } from "@/types/database";
 import { logActivity } from "./activity-service";
 
 /**
- * Fetch all customers from Supabase customers table
+ * Fetch all customers from Supabase customers table and compute live installment progress
  */
 export async function fetchCustomers(): Promise<{ data: Customer[]; error: string | null }> {
   const supabase = await getSupabaseClient();
@@ -12,7 +12,7 @@ export async function fetchCustomers(): Promise<{ data: Customer[]; error: strin
     return { data: [], error: "Supabase client is not initialized or credentials missing." };
   }
 
-  const { data, error } = await supabase
+  const { data: customerRows, error } = await supabase
     .from("customers")
     .select("*")
     .order("created_at", { ascending: false });
@@ -22,11 +22,52 @@ export async function fetchCustomers(): Promise<{ data: Customer[]; error: strin
     return { data: [], error: error.message };
   }
 
-  return { data: (data || []).map(mapRowToCustomer), error: null };
+  // Query recorded installments to compute live installment counts per customer
+  const { data: installmentRows } = await supabase
+    .from("installments")
+    .select("customer_id, customer_name, status, amount");
+
+  const recordedCountMap = new Map<string, number>();
+  const totalPaidMap = new Map<string, number>();
+
+  if (installmentRows) {
+    for (const inst of installmentRows) {
+      if (inst.status === "RECORDED") {
+        const key = inst.customer_id || inst.customer_name;
+        recordedCountMap.set(key, (recordedCountMap.get(key) || 0) + 1);
+        totalPaidMap.set(key, (totalPaidMap.get(key) || 0) + Number(inst.amount));
+      }
+    }
+  }
+
+  const customers = (customerRows || []).map((row) => {
+    const cust = mapRowToCustomer(row);
+    const key = row.id;
+    const keyByName = row.name;
+
+    // Use live recorded payments count if available, fallback to DB column
+    const realCount = recordedCountMap.has(key)
+      ? recordedCountMap.get(key)!
+      : recordedCountMap.get(keyByName) ?? row.installments_paid ?? 0;
+
+    const realPaidAmt = totalPaidMap.has(key)
+      ? totalPaidMap.get(key)!
+      : totalPaidMap.get(keyByName) ?? row.paid_amount ?? 0;
+
+    const totalInst = cust.totalInstallments || 12;
+    cust.installmentsPaid = realCount;
+    cust.paidAmount = realPaidAmt;
+    cust.percentage = Math.min(100, Math.round((realCount / totalInst) * 100));
+    cust.scheme = "Diwali Savings Scheme";
+
+    return cust;
+  });
+
+  return { data: customers, error: null };
 }
 
 /**
- * Fetch single customer by ID from Supabase customers table
+ * Fetch single customer by ID from Supabase customers table and compute live progress
  */
 export async function fetchCustomerById(id: string): Promise<{ data: Customer | null; error: string | null }> {
   const supabase = await getSupabaseClient();
@@ -45,7 +86,23 @@ export async function fetchCustomerById(id: string): Promise<{ data: Customer | 
     return { data: null, error: error?.message || "Customer not found." };
   }
 
-  return { data: mapRowToCustomer(data), error: null };
+  const customer = mapRowToCustomer(data);
+  customer.scheme = "Diwali Savings Scheme";
+
+  // Calculate live recorded installments count & total paid amount for this customer
+  const { data: installmentRows } = await supabase
+    .from("installments")
+    .select("amount, status")
+    .eq("customer_id", id);
+
+  if (installmentRows) {
+    const recordedList = installmentRows.filter((i) => i.status === "RECORDED");
+    customer.installmentsPaid = recordedList.length;
+    customer.paidAmount = recordedList.reduce((sum, i) => sum + Number(i.amount), 0);
+    customer.percentage = Math.min(100, Math.round((customer.installmentsPaid / customer.totalInstallments) * 100));
+  }
+
+  return { data: customer, error: null };
 }
 
 /**
@@ -68,7 +125,7 @@ export async function createCustomer(customerData: Partial<Customer>): Promise<{
     id: customerData.id || newId,
     name: customerData.name || "New Customer",
     mobile: customerData.mobile || "+91 90000 00000",
-    scheme_name: customerData.scheme || "Swarna Nidhi",
+    scheme_name: "Diwali Savings Scheme",
     status: customerData.status || "active",
     installments_paid: customerData.installmentsPaid || 1,
     total_installments: totalInst,
@@ -151,6 +208,8 @@ export async function updateCustomer(id: string, updates: Partial<Customer>): Pr
 }
 
 function mapRowToCustomer(row: CustomerRow): Customer {
+  const totalInst = row.total_installments || 12;
+  const instPaid = row.installments_paid || 0;
   return {
     id: row.id,
     name: row.name,
@@ -159,11 +218,11 @@ function mapRowToCustomer(row: CustomerRow): Customer {
     avatarTextColor: row.avatar_text_color || "#FFFFFF",
     photo: row.photo_url,
     mobile: row.mobile,
-    scheme: row.scheme_name,
+    scheme: "Diwali Savings Scheme",
     status: row.status,
-    installmentsPaid: row.installments_paid,
-    totalInstallments: row.total_installments,
-    percentage: row.percentage || Math.round((row.installments_paid / row.total_installments) * 100),
+    installmentsPaid: instPaid,
+    totalInstallments: totalInst,
+    percentage: Math.min(100, Math.round((instPaid / totalInst) * 100)),
     joinDate: row.join_date,
     address: row.address || "",
     paidAmount: Number(row.paid_amount),

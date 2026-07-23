@@ -58,68 +58,24 @@ body {
   }
 }
 
-/* ── Component Layer ─────────────────────────────────────── */
-@layer components {
-  /* Sidebar nav item */
-  .nav-item {
-    @apply flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium
-           text-gray-600 cursor-pointer transition-all duration-150
-           hover:bg-primary-50 hover:text-primary;
+/* ── Print Styles for Passbook ───────────────────────────── */
+@media print {
+  body * {
+    visibility: hidden !important;
   }
-  .nav-item.active {
-    @apply text-primary bg-primary-50 font-semibold;
-    border-left: 3px solid #7B1C1C;
-    padding-left: calc(1rem - 3px);
+  #passbook-print-area, #passbook-print-area * {
+    visibility: visible !important;
   }
-
-  /* Card base */
-  .card {
-    @apply bg-white rounded-2xl shadow-card;
-  }
-
-  /* Table header cell */
-  .th-cell {
-    @apply px-4 py-3 text-left text-2xs font-semibold tracking-widest
-           text-gray-400 uppercase;
-  }
-
-  /* Table body cell */
-  .td-cell {
-    @apply px-4 py-4 text-sm text-gray-700;
-  }
-
-  /* Primary button */
-  .btn-primary {
-    @apply flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold
-           text-white bg-primary hover:bg-primary-dark
-           transition-all duration-150 shadow-sm hover:shadow-md;
-  }
-
-  /* Secondary / outline button */
-  .btn-outline {
-    @apply flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold
-           text-gray-700 border border-gray-200 bg-white
-           hover:bg-gray-50 hover:border-gray-300
-           transition-all duration-150;
-  }
-
-  /* Input base */
-  .input-base {
-    @apply w-full px-3 py-2.5 text-sm text-gray-800
-           border border-gray-200 rounded-xl bg-white
-           placeholder:text-gray-400
-           focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40
-           transition-all duration-150;
-  }
-
-  /* Filter pill button */
-  .filter-pill {
-    @apply px-3.5 py-1.5 rounded-full text-sm font-medium border border-gray-200
-           text-gray-600 bg-white cursor-pointer
-           hover:border-primary/40 hover:text-primary
-           transition-all duration-150;
-  }
-  .filter-pill.active {
-    @apply bg-primary text-white border-primary font-semibold;
+  #passbook-print-area {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 24px !important;
+    background: #ffffff !important;
+    display: block !important;
+    box-shadow: none !important;
+    border: none !important;
   }
 }

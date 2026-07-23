@@ -25,7 +25,7 @@ class SupabaseSavingsRepository implements ISavingsRepository {
 
         return SchemeModel(
           id: customerData['id']?.toString() ?? 'SCHEME-001',
-          name: customerData['scheme_name']?.toString() ?? 'Swarna Nidhi',
+          name: customerData['scheme_name']?.toString() ?? 'Diwali Savings Scheme',
           monthlyDeposit: paidCount > 0 ? (paidAmt / paidCount) : 1000.0,
           paidInstallmentsCount: paidCount,
           totalInstallmentsCount: totalCount,
@@ -50,19 +50,50 @@ class SupabaseSavingsRepository implements ISavingsRepository {
       if (customerData != null && customerData['id'] != null) {
         final rawList = await _supabaseService.getInstallments(customerData['id'].toString());
         if (rawList.isNotEmpty) {
+          // Filter recorded/paid payments for sequence calculation
+          final successfulItems = rawList.where((item) {
+            final stStr = item['status']?.toString().toUpperCase() ?? '';
+            return stStr == 'PAID' || stStr == 'RECORDED';
+          }).toList();
+
+          // Sort chronologically ascending by date, then id
+          successfulItems.sort((a, b) {
+            final dateA = DateTime.tryParse(a['date']?.toString() ?? '') ?? DateTime(1970);
+            final dateB = DateTime.tryParse(b['date']?.toString() ?? '') ?? DateTime(1970);
+            if (dateA != dateB) return dateA.compareTo(dateB);
+            final idA = a['id']?.toString() ?? '';
+            final idB = b['id']?.toString() ?? '';
+            return idA.compareTo(idB);
+          });
+
+          final seqMap = <String, int>{};
+          for (var i = 0; i < successfulItems.length; i++) {
+            final id = successfulItems[i]['id']?.toString() ?? '';
+            if (id.isNotEmpty) {
+              seqMap[id] = i + 1;
+            }
+          }
+
           return rawList.map((item) {
             final stStr = item['status']?.toString().toUpperCase() ?? '';
             final statusEnum = (stStr == 'PAID' || stStr == 'RECORDED')
                 ? InstallmentStatus.paid
                 : InstallmentStatus.waiting;
+
+            final storedNum = (item['installment_number'] as num?)?.toInt();
+            final id = item['id']?.toString() ?? '';
+            final computedNum = (storedNum != null && storedNum > 0)
+                ? storedNum
+                : (seqMap[id] ?? 1);
+
             return InstallmentModel(
-              id: item['id']?.toString() ?? '#RJ-001',
-              installmentNumber: (item['installment_number'] as num?)?.toInt() ?? 1,
+              id: id.isNotEmpty ? id : '#RJ-001',
+              installmentNumber: computedNum,
               monthYearLabel: _formatMonthYear(item['date']?.toString()),
               amount: (item['amount'] as num?)?.toDouble() ?? 1000.0,
               date: item['date']?.toString() ?? '2023-09-15',
               paymentMethod: item['method']?.toString() ?? 'GPay',
-              receiptNumber: item['id']?.toString() ?? '#RJ-8821',
+              receiptNumber: id.isNotEmpty ? id : '#RJ-8821',
               status: statusEnum,
             );
           }).toList();
@@ -119,7 +150,7 @@ class SupabaseSavingsRepository implements ISavingsRepository {
   SchemeModel _fallbackScheme() {
     return const SchemeModel(
       id: 'SCHEME-001',
-      name: 'Swarna Nidhi',
+      name: 'Diwali Savings Scheme',
       monthlyDeposit: 1000.0,
       paidInstallmentsCount: 8,
       totalInstallmentsCount: 12,

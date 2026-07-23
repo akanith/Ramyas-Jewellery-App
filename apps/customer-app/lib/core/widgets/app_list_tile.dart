@@ -41,7 +41,7 @@ class AppListTile extends StatelessWidget {
     final tileContent = Container(
       padding: padding,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Colors.transparent,
         borderRadius: BorderRadius.circular(16),
         border: showBorder ? Border.all(color: AppColors.border, width: 1) : null,
       ),
@@ -147,14 +147,16 @@ class AppListTile extends StatelessWidget {
       ),
     );
 
-    if (onTap == null) {
-      return tileContent;
-    }
-
-    return InkWell(
-      onTap: onTap,
+    return Material(
+      color: Colors.white,
       borderRadius: BorderRadius.circular(16),
-      child: tileContent,
+      child: onTap == null
+          ? tileContent
+          : InkWell(
+              onTap: onTap,
+              borderRadius: BorderRadius.circular(16),
+              child: tileContent,
+            ),
     );
   }
 }

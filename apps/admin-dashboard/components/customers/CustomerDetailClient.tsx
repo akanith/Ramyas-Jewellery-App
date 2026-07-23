@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   ChevronRight,
@@ -16,6 +16,11 @@ import {
   FileText,
   NotebookPen,
   ShoppingBag,
+  Pencil,
+  Trash2,
+  X,
+  AlertTriangle,
+  Loader2,
 } from "lucide-react";
 import Avatar from "@/components/common/Avatar";
 import Badge from "@/components/common/Badge";
@@ -24,6 +29,12 @@ import RedemptionDialog from "@/components/customers/RedemptionDialog";
 import EditCustomerDialog from "@/components/customers/EditCustomerDialog";
 import RecordPaymentModal from "@/components/payments/RecordPaymentModal";
 import { fetchCustomerById } from "@/services/customer-service";
+import {
+  fetchInstallmentsByCustomerId,
+  updateInstallment,
+  deleteInstallment,
+  type Installment,
+} from "@/services/installment-service";
 import { type Customer } from "@/lib/mock-data/customers";
 import { formatINR, cn } from "@/lib/utils";
 
@@ -35,14 +46,81 @@ export default function CustomerDetailClient({
   customer: initialCustomer,
 }: CustomerDetailClientProps) {
   const [customer, setCustomer] = useState<Customer>(initialCustomer);
+  const [payments, setPayments] = useState<Installment[]>([]);
+  const [loadingPayments, setLoadingPayments] = useState(true);
   const [showRedemption, setShowRedemption] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showRecordPayment, setShowRecordPayment] = useState(false);
+  const [showPassbookPreview, setShowPassbookPreview] = useState(false);
+
+  // Edit Installment Modal State
+  const [editingPayment, setEditingPayment] = useState<Installment | null>(null);
+  const [editDate, setEditDate] = useState("");
+  const [editAmount, setEditAmount] = useState("");
+  const [editMethod, setEditMethod] = useState<string>("Cash");
+  const [editNotes, setEditNotes] = useState("");
+  const [savingEdit, setSavingEdit] = useState(false);
+
+  // Delete Installment Confirmation State
+  const [deletingPayment, setDeletingPayment] = useState<Installment | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  const loadPayments = async () => {
+    setLoadingPayments(true);
+    const res = await fetchInstallmentsByCustomerId(customer.id);
+    if (res.data) {
+      setPayments(res.data);
+    }
+    setLoadingPayments(false);
+  };
+
+  useEffect(() => {
+    loadPayments();
+  }, [customer.id]);
 
   const reloadCustomer = async () => {
     const res = await fetchCustomerById(customer.id);
     if (res.data) {
       setCustomer(res.data);
+    }
+    loadPayments();
+  };
+
+  const handleOpenEdit = (p: Installment) => {
+    setEditingPayment(p);
+    setEditDate(p.date);
+    setEditAmount(p.amount.toString());
+    setEditMethod(p.method);
+    setEditNotes("");
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingPayment) return;
+    setSavingEdit(true);
+    const res = await updateInstallment(editingPayment.id, {
+      date: editDate,
+      amount: Number(editAmount),
+      method: editMethod,
+    });
+    setSavingEdit(false);
+    if (res.success) {
+      setEditingPayment(null);
+      await reloadCustomer();
+    } else if (res.error) {
+      alert(`Error updating installment: ${res.error}`);
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deletingPayment) return;
+    setDeleting(true);
+    const res = await deleteInstallment(deletingPayment.id, customer.id);
+    setDeleting(false);
+    if (res.success) {
+      setDeletingPayment(null);
+      await reloadCustomer();
+    } else if (res.error) {
+      alert(`Error deleting installment: ${res.error}`);
     }
   };
 
@@ -227,7 +305,7 @@ export default function CustomerDetailClient({
             Edit Customer
           </button>
           <button
-            onClick={() => window.print()}
+            onClick={() => setShowPassbookPreview(true)}
             className="flex items-center gap-2 px-4 py-2.5 border border-gray-200 bg-white rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
           >
             <Printer className="w-4 h-4" strokeWidth={2} />
@@ -248,118 +326,144 @@ export default function CustomerDetailClient({
         <div className="grid grid-cols-[1fr_240px] gap-5">
           {/* Installment Timeline */}
           <div className="bg-white rounded-2xl shadow-card p-6">
-            <div className="flex items-center justify-between mb-5">
-              <h3 className="font-bold text-gray-900 text-base">
-                Installment Timeline
-              </h3>
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h3 className="font-bold text-gray-900 text-base">
+                  Installment Timeline
+                </h3>
+                <p className="text-2xs text-gray-400 font-medium mt-0.5">
+                  {customer.scheme} Schedule
+                </p>
+              </div>
               <span className="text-xs font-semibold text-gray-400">
-                2023 Payment Schedule
+                12-Month Plan
               </span>
             </div>
 
-            <div className="space-y-2.5">
-              {customer.installments.map((inst, i) => {
-                /* Grouped (April–July completed) */
-                if (inst.status === "grouped") {
-                  return (
-                    <div
-                      key={i}
-                      className="flex items-center gap-3 py-3 px-4 rounded-xl bg-green-50 border border-green-100"
-                    >
-                      <CheckCircle2
-                        className="w-5 h-5 text-green-500 flex-shrink-0"
-                        strokeWidth={1.8}
-                      />
-                      <span className="text-sm font-semibold text-green-700">
-                        {inst.groupLabel}
-                      </span>
-                      <CheckCircle2
-                        className="w-4 h-4 text-green-400 ml-auto"
-                        strokeWidth={1.8}
-                      />
-                    </div>
-                  );
-                }
+            {loadingPayments ? (
+              <div className="py-12 text-center text-xs text-gray-400 font-medium">
+                Loading installment timeline...
+              </div>
+            ) : (() => {
+              const recordedPayments = payments.filter((p) => p.status === "RECORDED");
+              const totalSlots = customer.totalInstallments || 12;
 
-                /* Upcoming */
-                if (inst.status === "upcoming") {
-                  return (
-                    <div
-                      key={i}
-                      className="flex items-center gap-3 py-2.5 px-4 rounded-xl bg-gray-50"
-                    >
-                      <Circle
-                        className="w-4 h-4 text-gray-300 flex-shrink-0"
-                        strokeWidth={1.5}
-                      />
-                      <div>
-                        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                          {inst.month}
-                        </p>
-                        <p className="text-xs text-gray-400">
-                          {inst.groupLabel}
-                        </p>
-                      </div>
-                    </div>
-                  );
-                }
-
-                /* Pending */
-                if (inst.status === "pending") {
-                  return (
-                    <div
-                      key={i}
-                      className="flex items-start gap-3 py-3 px-4 rounded-xl bg-amber-50 border border-amber-100"
-                    >
-                      <AlertCircle
-                        className="w-4.5 h-4.5 text-amber-500 flex-shrink-0 mt-0.5"
-                        strokeWidth={1.8}
-                      />
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between">
-                          <p className="text-sm font-bold text-amber-800">
-                            {inst.month}
-                          </p>
-                          <Badge variant="pending">PENDING</Badge>
-                        </div>
-                        <p className="text-xs text-amber-600 mt-0.5">
-                          {inst.date} • {inst.paymentMethod}
-                        </p>
-                      </div>
-                    </div>
-                  );
-                }
-
-                /* Paid */
+              if (recordedPayments.length === 0 && payments.length === 0) {
                 return (
-                  <div
-                    key={i}
-                    className="flex items-start gap-3 py-3 px-4 rounded-xl border border-gray-100 hover:bg-cream-50 transition-colors"
-                  >
-                    <CheckCircle2
-                      className="w-4.5 h-4.5 text-green-500 flex-shrink-0 mt-0.5"
-                      strokeWidth={1.8}
-                    />
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between">
-                        <p className="text-sm font-semibold text-gray-800">
-                          {inst.month}
-                        </p>
-                        <Badge variant="paid">PAID</Badge>
-                      </div>
-                      <p className="text-xs text-gray-400 mt-0.5">
-                        {inst.date} • {inst.paymentMethod}
-                        {inst.reference && (
-                          <span className="ml-1 text-gray-300">
-                            ({inst.reference})
-                          </span>
-                        )}
-                      </p>
+                  <div className="py-12 flex flex-col items-center justify-center text-center">
+                    <div className="w-12 h-12 rounded-full bg-amber-50 flex items-center justify-center mb-3">
+                      <CreditCard className="w-6 h-6 text-amber-600" />
                     </div>
+                    <p className="text-sm font-bold text-gray-800">
+                      No installment records available yet.
+                    </p>
+                    <p className="text-xs text-gray-400 mt-1 max-w-xs">
+                      Click "Record Installment" to record the first payment for {customer.name}.
+                    </p>
                   </div>
                 );
-              })}
-            </div>
+              }
+
+              return (
+                <div className="relative pl-6 space-y-4 before:absolute before:left-3 before:top-3 before:bottom-3 before:w-0.5 before:bg-gray-200">
+                  {Array.from({ length: totalSlots }).map((_, idx) => {
+                    const slotNum = idx + 1;
+                    const payment = recordedPayments[idx];
+
+                    if (payment) {
+                      return (
+                        <div key={payment.id || idx} className="relative flex items-start gap-4 group">
+                          <div className="absolute -left-6 top-1 w-6 h-6 rounded-full bg-green-100 flex items-center justify-center -translate-x-1/2 ring-4 ring-white">
+                            <CheckCircle2 className="w-4 h-4 text-green-600" strokeWidth={2} />
+                          </div>
+                          
+                          <div className="flex-1 bg-white p-3.5 rounded-xl border border-gray-100 shadow-sm hover:border-gray-200 transition-colors">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs font-extrabold text-primary px-2 py-0.5 bg-primary/10 rounded-md">
+                                  {payment.installment || `${slotNum}/${totalSlots}`}
+                                </span>
+                                <span className="text-xs font-bold text-gray-900">
+                                  {formatINR(payment.amount)}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Badge variant="paid">PAID</Badge>
+                                <div className="flex items-center gap-1.5">
+                                  <button
+                                    onClick={() => handleOpenEdit(payment)}
+                                    className="p-1 rounded-lg text-stone-500 hover:text-stone-800 hover:bg-stone-100 border border-stone-200 transition-colors"
+                                    title="Edit Installment"
+                                  >
+                                    <Pencil className="w-3.5 h-3.5" />
+                                  </button>
+                                  <button
+                                    onClick={() => setDeletingPayment(payment)}
+                                    className="p-1 rounded-lg text-red-600 bg-red-50 hover:bg-red-100 border border-red-200/60 transition-colors"
+                                    title="Delete Installment"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="flex items-center justify-between text-2xs text-gray-400 mt-2 pt-2 border-t border-gray-50">
+                              <span>Date: <strong className="text-gray-600">{payment.date}</strong></span>
+                              <span>Method: <strong className="text-gray-600">{payment.method}</strong></span>
+                              <span>Receipt: <strong className="text-primary font-mono">{payment.id}</strong></span>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    }
+
+                    if (slotNum === recordedPayments.length + 1) {
+                      return (
+                        <div key={idx} className="relative flex items-start gap-4">
+                          <div className="absolute -left-6 top-1 w-6 h-6 rounded-full bg-amber-100 flex items-center justify-center -translate-x-1/2 ring-4 ring-white">
+                            <AlertCircle className="w-4 h-4 text-amber-600" strokeWidth={2} />
+                          </div>
+                          
+                          <div className="flex-1 bg-amber-50/50 p-3.5 rounded-xl border border-amber-200/60 shadow-sm">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs font-extrabold text-amber-800 px-2 py-0.5 bg-amber-100 rounded-md">
+                                  {slotNum}/{totalSlots}
+                                </span>
+                                <span className="text-xs font-bold text-amber-900">
+                                  Next Payment Due
+                                </span>
+                              </div>
+                              <Badge variant="pending">DUE</Badge>
+                            </div>
+                            <p className="text-2xs text-amber-700 mt-1">
+                              Monthly installment expected for {customer.scheme}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <div key={idx} className="relative flex items-start gap-4 opacity-50">
+                        <div className="absolute -left-6 top-1.5 w-5 h-5 rounded-full bg-gray-100 flex items-center justify-center -translate-x-1/2 ring-4 ring-white">
+                          <Circle className="w-3 h-3 text-gray-400" strokeWidth={1.5} />
+                        </div>
+                        
+                        <div className="flex-1 bg-gray-50/50 p-3 rounded-xl border border-gray-100">
+                          <div className="flex items-center justify-between">
+                            <span className="text-2xs font-semibold text-gray-500">
+                              Installment {slotNum}/{totalSlots}
+                            </span>
+                            <span className="text-2xs text-gray-400 uppercase font-medium">Upcoming</span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })()}
           </div>
 
           {/* Right sidebar */}
@@ -501,6 +605,316 @@ export default function CustomerDetailClient({
         onClose={() => setShowRecordPayment(false)}
         onSuccess={reloadCustomer}
       />
+
+      {/* Edit Installment Modal */}
+      {editingPayment && (
+        <div className="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4">
+          <div className="fixed inset-0 bg-stone-900/40 backdrop-blur-sm transition-opacity" onClick={() => setEditingPayment(null)} />
+          <div className="relative bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl z-10 animate-scale-up">
+            <div className="flex items-center justify-between mb-4 pb-3 border-b border-stone-100">
+              <div>
+                <h3 className="text-lg font-bold text-stone-900">Edit Installment</h3>
+                <p className="text-xs text-stone-500">
+                  {customer.name} • {editingPayment.installment} ({editingPayment.id})
+                </p>
+              </div>
+              <button onClick={() => setEditingPayment(null)} className="p-1 text-stone-400 hover:text-stone-600 rounded-lg">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-2xs font-bold uppercase tracking-wider text-stone-500 mb-1">
+                  Payment Date
+                </label>
+                <input
+                  type="date"
+                  value={editDate}
+                  onChange={(e) => setEditDate(e.target.value)}
+                  className="w-full px-3.5 py-2 border border-stone-200 rounded-xl text-xs text-stone-900 focus:outline-none focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
+
+              <div>
+                <label className="block text-2xs font-bold uppercase tracking-wider text-stone-500 mb-1">
+                  Amount (₹)
+                </label>
+                <input
+                  type="number"
+                  value={editAmount}
+                  onChange={(e) => setEditAmount(e.target.value)}
+                  className="w-full px-3.5 py-2 border border-stone-200 rounded-xl text-xs text-stone-900 font-bold focus:outline-none focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
+
+              <div>
+                <label className="block text-2xs font-bold uppercase tracking-wider text-stone-500 mb-1">
+                  Payment Method
+                </label>
+                <select
+                  value={editMethod}
+                  onChange={(e) => setEditMethod(e.target.value)}
+                  className="w-full px-3.5 py-2 border border-stone-200 rounded-xl text-xs text-stone-900 font-semibold bg-white focus:outline-none focus:ring-2 focus:ring-primary/20"
+                >
+                  <option value="Cash">Cash</option>
+                  <option value="GPay">GPay</option>
+                  <option value="PhonePe">PhonePe</option>
+                  <option value="Bank Transfer">Bank Transfer</option>
+                  <option value="UPI">UPI</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-2xs font-bold uppercase tracking-wider text-stone-500 mb-1">
+                  Receipt Number (Read Only)
+                </label>
+                <input
+                  type="text"
+                  value={editingPayment.id}
+                  disabled
+                  className="w-full px-3.5 py-2 border border-stone-200 rounded-xl text-xs text-stone-400 bg-stone-50 font-mono"
+                />
+              </div>
+
+              <div>
+                <label className="block text-2xs font-bold uppercase tracking-wider text-stone-500 mb-1">
+                  Notes / Remarks (Optional)
+                </label>
+                <input
+                  type="text"
+                  value={editNotes}
+                  onChange={(e) => setEditNotes(e.target.value)}
+                  placeholder="e.g. Updated payment details"
+                  className="w-full px-3.5 py-2 border border-stone-200 rounded-xl text-xs text-stone-900 focus:outline-none focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 mt-6 pt-4 border-t border-stone-100">
+              <button
+                onClick={() => setEditingPayment(null)}
+                className="px-4 py-2 border border-stone-200 rounded-xl text-xs font-semibold text-stone-600 hover:bg-stone-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveEdit}
+                disabled={savingEdit}
+                className="px-5 py-2 bg-primary text-white rounded-xl text-xs font-bold hover:bg-primary-dark disabled:opacity-50 flex items-center gap-2"
+              >
+                {savingEdit && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                Save Changes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Installment Confirmation Modal */}
+      {deletingPayment && (
+        <div className="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4">
+          <div className="fixed inset-0 bg-stone-900/40 backdrop-blur-sm transition-opacity" onClick={() => setDeletingPayment(null)} />
+          <div className="relative bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl z-10 animate-scale-up text-center">
+            <div className="w-12 h-12 rounded-full bg-red-100 text-red-600 flex items-center justify-center mx-auto mb-4">
+              <AlertTriangle className="w-6 h-6" />
+            </div>
+            
+            <h3 className="text-base font-bold text-stone-900 mb-1">Delete Installment</h3>
+            <p className="text-xs text-stone-500 mb-6">
+              Are you sure you want to delete this installment? This action cannot be undone.
+            </p>
+
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setDeletingPayment(null)}
+                className="flex-1 py-2.5 border border-stone-200 rounded-xl text-xs font-semibold text-stone-600 hover:bg-stone-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmDelete}
+                disabled={deleting}
+                className="flex-1 py-2.5 bg-red-600 text-white rounded-xl text-xs font-bold hover:bg-red-700 disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {deleting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Official Passbook Preview & Print Modal ── */}
+      {showPassbookPreview && (() => {
+        const recordedList = payments.filter((p) => p.status === "RECORDED");
+        const totalPaid = recordedList.reduce((sum, p) => sum + Number(p.amount), 0);
+        const remAmount = Math.max(0, 12000 - totalPaid);
+        const bonus = 1000;
+        const totalEligible = totalPaid + bonus;
+
+        return (
+          <div className="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4">
+            <div className="fixed inset-0 bg-stone-900/60 backdrop-blur-sm transition-opacity" onClick={() => setShowPassbookPreview(false)} />
+            <div className="relative bg-white rounded-2xl max-w-3xl w-full p-6 shadow-2xl z-10 animate-scale-up max-h-[90vh] flex flex-col">
+              
+              {/* Modal Header Controls */}
+              <div className="flex items-center justify-between pb-4 border-b border-stone-200 flex-shrink-0">
+                <div>
+                  <h3 className="text-lg font-bold text-stone-900">Passbook Print Preview</h3>
+                  <p className="text-xs text-stone-500">
+                    {customer.name} ({customer.id}) • Diwali Savings Scheme
+                  </p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => window.print()}
+                    className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-xl text-xs font-bold shadow-sm transition-all"
+                  >
+                    <Printer className="w-4 h-4" />
+                    Print / Save PDF
+                  </button>
+                  <button
+                    onClick={() => setShowPassbookPreview(false)}
+                    className="p-1 text-stone-400 hover:text-stone-600 rounded-lg"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Printable Passbook Document */}
+              <div className="overflow-y-auto pt-6 pr-2 flex-1">
+                <div id="passbook-print-area" className="font-sans text-stone-900 bg-white p-6 border border-stone-200 rounded-2xl">
+                  
+                  {/* Brand Header */}
+                  <div className="border-b-2 border-primary pb-4 mb-6 text-center">
+                    <h1 className="text-2xl font-black text-primary tracking-tight uppercase">RAMYAS JEWELLER</h1>
+                    <p className="text-xs font-bold text-amber-800 tracking-widest uppercase mt-0.5">
+                      DIWALI SAVINGS SCHEME PASSBOOK
+                    </p>
+                    <p className="text-3xs text-stone-500 mt-1">Official Customer Deposit Record & Savings Ledger</p>
+                  </div>
+
+                  {/* Customer Information Grid */}
+                  <div className="grid grid-cols-2 gap-4 border border-stone-200 rounded-xl p-4 mb-6 bg-stone-50/50 text-xs">
+                    <div className="space-y-1.5">
+                      <p className="text-stone-600">Customer Name: <strong className="text-stone-900 font-bold">{customer.name}</strong></p>
+                      <p className="text-stone-600">Customer ID: <strong className="text-stone-900 font-mono">{customer.id}</strong></p>
+                      <p className="text-stone-600">Mobile Number: <strong className="text-stone-900">{customer.mobile}</strong></p>
+                      <p className="text-stone-600">Scheme Name: <strong className="text-stone-900">Diwali Savings Scheme</strong></p>
+                      <p className="text-stone-600">Scheme Start Date: <strong className="text-stone-900">{customer.joinDate || customer.startDate}</strong></p>
+                      <p className="text-stone-600">Maturity Date: <strong className="text-stone-900">{customer.matureDate}</strong></p>
+                    </div>
+                    <div className="space-y-1.5 text-right">
+                      <p className="text-stone-600">Monthly Deposit: <strong className="text-stone-900 font-bold">{formatINR(1000)}</strong></p>
+                      <p className="text-stone-600">Total Scheme Value: <strong className="text-stone-900 font-bold">{formatINR(12000)}</strong></p>
+                      <p className="text-stone-600">Total Installments: <strong className="text-stone-900">12 Months</strong></p>
+                      <p className="text-stone-600">Completed Installments: <strong className="text-green-700 font-bold">{recordedList.length}</strong></p>
+                      <p className="text-stone-600">Remaining Installments: <strong className="text-amber-700 font-bold">{Math.max(0, 12 - recordedList.length)}</strong></p>
+                    </div>
+                  </div>
+
+                  {/* Installment Timeline Table */}
+                  <div className="mb-6">
+                    <h2 className="text-xs font-extrabold uppercase tracking-wider text-stone-500 mb-2">
+                      INSTALLMENT TIMELINE & DEPOSIT LEDGER
+                    </h2>
+                    <table className="w-full text-xs border-collapse border border-stone-200">
+                      <thead>
+                        <tr className="bg-stone-100 text-stone-700 font-bold text-left border-b border-stone-200">
+                          <th className="p-2 border-r border-stone-200">Installment No.</th>
+                          <th className="p-2 border-r border-stone-200">Payment Date</th>
+                          <th className="p-2 border-r border-stone-200">Receipt No.</th>
+                          <th className="p-2 border-r border-stone-200">Payment Method</th>
+                          <th className="p-2 border-r border-stone-200">Amount</th>
+                          <th className="p-2">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {Array.from({ length: 12 }).map((_, idx) => {
+                          const slotNum = idx + 1;
+                          const payment = recordedList[idx];
+                          if (payment) {
+                            return (
+                              <tr key={payment.id || idx} className="border-b border-stone-200 font-medium">
+                                <td className="p-2 border-r border-stone-200 font-bold text-primary">{payment.installment || `${slotNum}/12`}</td>
+                                <td className="p-2 border-r border-stone-200">{payment.date}</td>
+                                <td className="p-2 border-r border-stone-200 font-mono text-primary">{payment.id}</td>
+                                <td className="p-2 border-r border-stone-200">{payment.method}</td>
+                                <td className="p-2 border-r border-stone-200 font-bold">{formatINR(payment.amount)}</td>
+                                <td className="p-2 text-green-700 font-bold">Paid</td>
+                              </tr>
+                            );
+                          }
+                          if (slotNum === recordedList.length + 1) {
+                            return (
+                              <tr key={idx} className="border-b border-stone-200 bg-amber-50/40">
+                                <td className="p-2 border-r border-stone-200 font-bold text-amber-800">{slotNum}/12</td>
+                                <td className="p-2 border-r border-stone-200 text-stone-400">Upcoming</td>
+                                <td className="p-2 border-r border-stone-200 text-stone-300">--</td>
+                                <td className="p-2 border-r border-stone-200 text-stone-300">--</td>
+                                <td className="p-2 border-r border-stone-200 font-bold text-amber-800">{formatINR(1000)}</td>
+                                <td className="p-2 text-amber-700 font-bold">Due</td>
+                              </tr>
+                            );
+                          }
+                          return (
+                            <tr key={idx} className="border-b border-stone-200 text-stone-400">
+                              <td className="p-2 border-r border-stone-200 font-semibold">{slotNum}/12</td>
+                              <td className="p-2 border-r border-stone-200">Upcoming</td>
+                              <td className="p-2 border-r border-stone-200 text-stone-300">--</td>
+                              <td className="p-2 border-r border-stone-200 text-stone-300">--</td>
+                              <td className="p-2 border-r border-stone-200 font-medium">{formatINR(1000)}</td>
+                              <td className="p-2 text-stone-400 font-medium">Pending</td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Summary Financial Totals */}
+                  <div className="border border-stone-200 rounded-xl p-4 bg-stone-50/40 text-xs mb-8">
+                    <div className="grid grid-cols-4 gap-4 text-center">
+                      <div>
+                        <p className="text-3xs text-stone-400 font-bold uppercase">Total Paid Amount</p>
+                        <p className="text-sm font-extrabold text-stone-900 mt-0.5">{formatINR(totalPaid)}</p>
+                      </div>
+                      <div>
+                        <p className="text-3xs text-stone-400 font-bold uppercase">Remaining Amount</p>
+                        <p className="text-sm font-extrabold text-stone-700 mt-0.5">{formatINR(remAmount)}</p>
+                      </div>
+                      <div>
+                        <p className="text-3xs text-stone-400 font-bold uppercase">Shop Bonus</p>
+                        <p className="text-sm font-extrabold text-emerald-700 mt-0.5">{formatINR(bonus)}</p>
+                      </div>
+                      <div>
+                        <p className="text-3xs text-stone-400 font-bold uppercase">Total Eligible Value</p>
+                        <p className="text-sm font-extrabold text-primary mt-0.5">{formatINR(totalEligible)}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Footer Stamp & Audit Line */}
+                  <div className="flex justify-between items-end text-3xs text-stone-400 border-t border-stone-200 pt-4">
+                    <div>
+                      <p>Generated On: <strong className="text-stone-600">{new Date().toLocaleString()}</strong></p>
+                      <p>Generated By: <strong className="text-stone-600">Owner (Ramyas Admin)</strong></p>
+                    </div>
+                    <div className="text-center">
+                      <div className="border-b border-stone-300 w-36 mb-1 mx-auto" />
+                      <p className="font-bold text-stone-600">Authorized Signatory</p>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }

@@ -33,7 +33,7 @@ export default function NewCustomerPage() {
   const [pincode, setPincode] = useState("");
   const [aadhaar, setAadhaar] = useState("");
 
-  const [schemeName, setSchemeName] = useState("Swarna Nidhi");
+  const [schemeName, setSchemeName] = useState("Diwali Savings Scheme");
   const [monthlyInstallment, setMonthlyInstallment] = useState("1000");
   const [totalInstallments, setTotalInstallments] = useState("12");
   const [shopBonus, setShopBonus] = useState("1000");
@@ -359,9 +359,7 @@ export default function NewCustomerPage() {
                   onChange={(e) => setSchemeName(e.target.value)}
                   className="w-full px-3.5 py-2 border border-stone-200 rounded-xl text-xs text-stone-900 bg-white focus:outline-none focus:ring-2 focus:ring-primary/20"
                 >
-                  <option value="Swarna Nidhi">Swarna Nidhi (Standard 12 Months)</option>
-                  <option value="Diamond Monthly">Diamond Monthly</option>
-                  <option value="Gold Savings">Gold Savings Scheme</option>
+                  <option value="Diwali Savings Scheme">Diwali Savings Scheme (Standard 12 Months)</option>
                 </select>
               </div>
               <div>

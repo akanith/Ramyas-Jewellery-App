@@ -30,7 +30,7 @@ class StatusChip extends StatelessWidget {
     this.textStyle,
   });
 
-  /// Factory for Gold Swarna Lakshmi Scheme Chip
+  /// Factory for Diwali Savings Scheme Chip
   factory StatusChip.schemePill({required String label}) {
     return StatusChip(
       label: label,

@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS public.customers (
     village VARCHAR(100),
     pincode VARCHAR(10),
     aadhaar VARCHAR(20),
-    scheme_name VARCHAR(100) NOT NULL DEFAULT 'Swarna Nidhi',
+    scheme_name VARCHAR(100) NOT NULL DEFAULT 'Diwali Savings Scheme',
     status VARCHAR(30) NOT NULL DEFAULT 'active',
     installments_paid INT NOT NULL DEFAULT 0,
     total_installments INT NOT NULL DEFAULT 12,
