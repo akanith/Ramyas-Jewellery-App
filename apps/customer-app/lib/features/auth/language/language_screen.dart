@@ -95,8 +95,8 @@ class _LanguageScreenState extends ConsumerState<LanguageScreen> {
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
                                 colors: [
-                                  AppColors.primary.withOpacity(0.05),
-                                  AppColors.accent.withOpacity(0.1),
+                                  AppColors.primary.withValues(alpha: 0.05),
+                                  AppColors.accent.withValues(alpha: 0.1),
                                 ],
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,

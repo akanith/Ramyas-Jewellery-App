@@ -430,8 +430,7 @@ class ProfileScreen extends ConsumerWidget {
         onTap: (index) {
           if (index == 0) context.go('/home');
           if (index == 1) context.go('/passbook');
-          if (index == 2) context.go('/receipt');
-          if (index == 3) context.go('/profile');
+          if (index == 2) context.go('/notifications');
         },
       ),
     );

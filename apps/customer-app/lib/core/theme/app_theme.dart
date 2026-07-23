@@ -14,7 +14,6 @@ class AppTheme {
         seedColor: AppColors.primary,
         primary: AppColors.primary,
         secondary: AppColors.accent,
-        background: AppColors.background,
         surface: AppColors.surface,
         onPrimary: AppColors.textOnPrimary,
         onSurface: AppColors.textPrimary,
@@ -30,7 +29,7 @@ class AppTheme {
         iconTheme: const IconThemeData(color: AppColors.primary),
         titleTextStyle: AppTextStyles.h2.copyWith(color: AppColors.primary),
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: AppColors.card,
         elevation: 0,
         shape: RoundedRectangleBorder(

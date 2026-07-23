@@ -44,7 +44,7 @@ class AppErrorWidget extends StatelessWidget {
                 height: 140,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: AppColors.primarySoft.withOpacity(0.5),
+                  color: AppColors.primarySoft.withValues(alpha: 0.5),
                 ),
               ),
               // Broken Diamond Graphic representation
@@ -54,7 +54,7 @@ class AppErrorWidget extends StatelessWidget {
                   Icon(
                     Icons.diamond_outlined,
                     size: 84,
-                    color: AppColors.primary.withOpacity(0.85),
+                    color: AppColors.primary.withValues(alpha: 0.85),
                   ),
                   // Scattered golden crystal fragments
                   const Positioned(

@@ -21,7 +21,7 @@ class VisitShopScreen extends ConsumerWidget {
       appBar: CustomAppBar(
         title: 'Visit Our Shop',
         showBackButton: true,
-        onBackPressed: () => context.maybePop(),
+        onBackPressed: () => Navigator.of(context).maybePop(),
         actions: [
           IconButton(
             icon: const Icon(Icons.share_outlined, color: AppColors.primary),
@@ -430,7 +430,7 @@ class VisitShopScreen extends ConsumerWidget {
         onTap: (index) {
           if (index == 0) context.go('/home');
           if (index == 1) context.go('/passbook');
-          if (index == 2) context.go('/receipt');
+          if (index == 2) context.go('/notifications');
           if (index == 3) context.go('/profile');
         },
       ),

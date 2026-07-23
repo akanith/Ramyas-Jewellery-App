@@ -20,27 +20,61 @@ class ReceiptModel extends Equatable {
   final double nextDueAmount;
   final String shopName;
   final String shopAddress;
+  final String mobileNumber;
+  final String installmentMonth;
 
   const ReceiptModel({
-    required this.receiptNumber,
-    required this.customerName,
-    required this.customerId,
-    required this.schemeName,
-    required this.installmentIndex,
-    required this.totalInstallments,
-    required this.paymentDate,
-    required this.collectedBy,
-    required this.amount,
-    required this.paymentMethod,
-    required this.collectedAt,
-    required this.paidSoFar,
-    required this.remainingAmount,
-    required this.bonusAmount,
-    required this.nextDueDate,
-    required this.nextDueAmount,
-    required this.shopName,
-    required this.shopAddress,
-  });
+    String? receiptNumber,
+    String? customerName,
+    String? customerId,
+    String? schemeName,
+    int? installmentIndex,
+    int? installmentNumber,
+    int? totalInstallments,
+    String? paymentDate,
+    String? transactionDate,
+    String? collectedBy,
+    double? amount,
+    double? amountPaid,
+    String? paymentMethod,
+    String? collectedAt,
+    double? paidSoFar,
+    double? accumulatedBalance,
+    double? remainingAmount,
+    double? bonusAmount,
+    double? shopBonusAccumulated,
+    String? nextDueDate,
+    double? nextDueAmount,
+    String? shopName,
+    String? shopAddress,
+    String? mobileNumber,
+    String? installmentMonth,
+  })  : receiptNumber = receiptNumber ?? '#RJ-8821',
+        customerName = customerName ?? 'Customer',
+        customerId = customerId ?? 'RJ-0000',
+        schemeName = schemeName ?? 'Gold Savings Scheme',
+        installmentIndex = installmentIndex ?? installmentNumber ?? 1,
+        totalInstallments = totalInstallments ?? 12,
+        paymentDate = paymentDate ?? transactionDate ?? 'Today',
+        collectedBy = collectedBy ?? 'Admin',
+        amount = amount ?? amountPaid ?? 1000.0,
+        paymentMethod = paymentMethod ?? 'Online',
+        collectedAt = collectedAt ?? 'Store',
+        paidSoFar = paidSoFar ?? accumulatedBalance ?? 1000.0,
+        remainingAmount = remainingAmount ?? 11000.0,
+        bonusAmount = bonusAmount ?? shopBonusAccumulated ?? 1000.0,
+        nextDueDate = nextDueDate ?? 'Next Month',
+        nextDueAmount = nextDueAmount ?? 1000.0,
+        shopName = shopName ?? 'Ramyas Jeweller',
+        shopAddress = shopAddress ?? 'Coimbatore',
+        mobileNumber = mobileNumber ?? '+91 98765 43210',
+        installmentMonth = installmentMonth ?? 'Current Month';
+
+  int get installmentNumber => installmentIndex;
+  double get amountPaid => amount;
+  double get accumulatedBalance => paidSoFar;
+  double get shopBonusAccumulated => bonusAmount;
+  String get transactionDate => paymentDate;
 
   @override
   List<Object?> get props => [
@@ -62,5 +96,8 @@ class ReceiptModel extends Equatable {
         nextDueAmount,
         shopName,
         shopAddress,
+        mobileNumber,
+        installmentMonth,
       ];
 }
+

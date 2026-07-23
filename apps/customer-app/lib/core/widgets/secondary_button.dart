@@ -44,7 +44,7 @@ class SecondaryButton extends StatelessWidget {
         ),
         onPressed: onPressed,
         child: Row(
-          mainAxisAlignment: MainCenterAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
           children: [
             if (iconWidget != null) ...[

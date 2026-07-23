@@ -63,9 +63,9 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                 Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.15),
+                    color: Colors.white.withValues(alpha: 0.15),
                     shape: BoxShape.circle,
-                    border: Border.all(color: AppColors.goldYellow.withOpacity(0.5), width: 2),
+                    border: Border.all(color: AppColors.goldYellow.withValues(alpha: 0.5), width: 2),
                   ),
                   child: const Icon(
                     Icons.diamond_outlined,

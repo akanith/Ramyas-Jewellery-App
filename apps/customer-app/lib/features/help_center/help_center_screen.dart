@@ -35,7 +35,7 @@ class _HelpCenterScreenState extends ConsumerState<HelpCenterScreen> {
       appBar: CustomAppBar(
         title: 'Help Center',
         showBackButton: true,
-        onBackPressed: () => context.maybePop(),
+        onBackPressed: () => Navigator.of(context).maybePop(),
         actions: [
           IconButton(
             icon: const Icon(Icons.search, color: AppColors.primary),
@@ -129,9 +129,11 @@ class _HelpCenterScreenState extends ConsumerState<HelpCenterScreen> {
                     }).toList(),
                   );
                 },
-                loading: () => const Center(
+                loading: () => const Padding(
                   padding: EdgeInsets.all(24),
-                  child: CircularProgressIndicator(color: AppColors.primary),
+                  child: Center(
+                    child: CircularProgressIndicator(color: AppColors.primary),
+                  ),
                 ),
                 error: (err, stack) => Text('Error loading FAQs: $err'),
               ),
@@ -257,7 +259,7 @@ class _HelpCenterScreenState extends ConsumerState<HelpCenterScreen> {
         onTap: (index) {
           if (index == 0) context.go('/home');
           if (index == 1) context.go('/passbook');
-          if (index == 2) context.go('/receipt');
+          if (index == 2) context.go('/notifications');
           if (index == 3) context.go('/profile');
         },
       ),

@@ -16,19 +16,36 @@ class SchemeModel extends Equatable {
   final String status;
 
   const SchemeModel({
-    required this.schemeId,
-    required this.schemeName,
+    String? schemeId,
+    String? schemeName,
+    String? id,
+    String? name,
     required this.monthlyDeposit,
-    required this.totalInstallments,
-    required this.completedInstallments,
-    required this.totalPaidAmount,
-    required this.remainingAmount,
+    int? totalInstallments,
+    int? completedInstallments,
+    int? totalInstallmentsCount,
+    int? paidInstallmentsCount,
+    double? totalPaidAmount,
+    double? accumulatedTotal,
+    double? remainingAmount,
     required this.nextDueDate,
-    required this.maturityDate,
+    String? maturityDate,
     required this.maturityTotalValue,
     required this.shopBonus,
     this.status = 'Active',
-  });
+  })  : schemeId = schemeId ?? id ?? '',
+        schemeName = schemeName ?? name ?? '',
+        totalInstallments = totalInstallments ?? totalInstallmentsCount ?? 12,
+        completedInstallments = completedInstallments ?? paidInstallmentsCount ?? 0,
+        totalPaidAmount = totalPaidAmount ?? accumulatedTotal ?? 0.0,
+        remainingAmount = remainingAmount ?? (monthlyDeposit * (totalInstallments ?? totalInstallmentsCount ?? 12) - (totalPaidAmount ?? accumulatedTotal ?? 0.0)),
+        maturityDate = maturityDate ?? 'N/A';
+
+  String get id => schemeId;
+  String get name => schemeName;
+  int get paidInstallmentsCount => completedInstallments;
+  int get totalInstallmentsCount => totalInstallments;
+  double get accumulatedTotal => totalPaidAmount;
 
   double get completionPercentage =>
       totalInstallments > 0 ? (completedInstallments / totalInstallments) * 100 : 0;
@@ -49,3 +66,4 @@ class SchemeModel extends Equatable {
         status,
       ];
 }
+

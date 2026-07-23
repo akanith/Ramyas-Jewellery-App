@@ -12,7 +12,7 @@ void main() async {
   try {
     await Supabase.initialize(
       url: AppConfig.supabaseUrl,
-      anonKey: AppConfig.supabaseAnonKey,
+      publishableKey: AppConfig.supabaseAnonKey,
     );
   } catch (_) {
     // Graceful fallback if Supabase initialized or offline

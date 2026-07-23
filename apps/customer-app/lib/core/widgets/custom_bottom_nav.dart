@@ -38,14 +38,14 @@ class CustomBottomNav extends StatelessWidget {
       route: '/passbook',
     ),
     CustomBottomNavItem(
-      icon: Icons.savings_outlined,
-      label: 'Savings',
-      route: '/receipt',
+      icon: Icons.campaign_outlined,
+      label: 'Updates',
+      route: '/notifications',
     ),
     CustomBottomNavItem(
       icon: Icons.person_outline,
       label: 'Profile',
-      route: '/home',
+      route: '/profile',
     ),
   ];
 

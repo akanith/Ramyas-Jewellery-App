@@ -22,7 +22,7 @@ class NotificationsScreen extends ConsumerWidget {
       appBar: CustomAppBar(
         title: 'Notifications',
         showBackButton: true,
-        onBackPressed: () => context.maybePop(),
+        onBackPressed: () => Navigator.of(context).maybePop(),
         actions: [
           Stack(
             children: [
@@ -99,7 +99,7 @@ class NotificationsScreen extends ConsumerWidget {
                           height: 140,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: Colors.white.withOpacity(0.08),
+                            color: Colors.white.withValues(alpha: 0.08),
                           ),
                         ),
                       ),
@@ -111,7 +111,7 @@ class NotificationsScreen extends ConsumerWidget {
                           height: 100,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: Colors.white.withOpacity(0.05),
+                            color: Colors.white.withValues(alpha: 0.05),
                           ),
                         ),
                       ),
@@ -136,7 +136,7 @@ class NotificationsScreen extends ConsumerWidget {
                               child: Text(
                                 'Check out our latest 22K Gold Temple Collection.',
                                 style: AppTextStyles.bodyMedium.copyWith(
-                                  color: Colors.white.withOpacity(0.9),
+                                  color: Colors.white.withValues(alpha: 0.9),
                                   fontSize: 13,
                                   height: 1.3,
                                 ),
@@ -183,9 +183,11 @@ class NotificationsScreen extends ConsumerWidget {
                     ],
                   );
                 },
-                loading: () => const Center(
+                loading: () => const Padding(
                   padding: EdgeInsets.all(30),
-                  child: CircularProgressIndicator(color: AppColors.primary),
+                  child: Center(
+                    child: CircularProgressIndicator(color: AppColors.primary),
+                  ),
                 ),
                 error: (err, stack) => Text('Error: $err'),
               ),
@@ -202,7 +204,6 @@ class NotificationsScreen extends ConsumerWidget {
         onTap: (index) {
           if (index == 0) context.go('/home');
           if (index == 1) context.go('/passbook');
-          if (index == 2) context.go('/receipt');
           if (index == 3) context.go('/profile');
         },
       ),

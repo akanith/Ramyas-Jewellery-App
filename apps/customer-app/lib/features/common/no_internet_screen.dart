@@ -57,7 +57,7 @@ class NoInternetScreen extends StatelessWidget {
                     child: IconButton(
                       padding: EdgeInsets.zero,
                       icon: const Icon(Icons.close, color: AppColors.textPrimary, size: 20),
-                      onPressed: () => context.maybePop(),
+                      onPressed: () => Navigator.of(context).maybePop(),
                     ),
                   ),
                 ],

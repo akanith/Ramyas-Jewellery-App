@@ -6,12 +6,12 @@ class AppConfig {
   // Note: Standard Supabase URL & Anon key for Ramyas Jeweller project.
   static const String supabaseUrl = String.fromEnvironment(
     'SUPABASE_URL',
-    defaultValue: 'https://xyzcompany.supabase.co',
+    defaultValue: 'https://icsqnkqwvlrgtncmtmqv.supabase.co',
   );
 
   static const String supabaseAnonKey = String.fromEnvironment(
     'SUPABASE_ANON_KEY',
-    defaultValue: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5emNvbXBhbnkiLCJyb2xlIjoiYW5vbiIsImlhdCI6MTY3MjUxMjAwMCwiZXhwIjoy03ODc4NDAwMH0.dummyAnonKeyTokenPlaceholder',
+    defaultValue: 'sb_publishable_6u227x1Q3s7Pbd1wsKTUEg_pMJl_CUt',
   );
 
   // Auth Constants

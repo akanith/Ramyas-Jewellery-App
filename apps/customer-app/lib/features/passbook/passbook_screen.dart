@@ -193,7 +193,8 @@ class PassbookScreen extends ConsumerWidget {
         currentIndex: 1,
         onTap: (index) {
           if (index == 0) context.go('/home');
-          if (index == 2) context.go('/receipt');
+          if (index == 2) context.go('/notifications');
+          if (index == 3) context.go('/profile');
         },
       ),
     );
@@ -230,7 +231,7 @@ class PassbookScreen extends ConsumerWidget {
               border: isPaid || isWaiting
                   ? null
                   : Border.all(
-                      color: AppColors.textMuted.withOpacity(0.4),
+                      color: AppColors.textMuted.withValues(alpha: 0.4),
                       width: 1.5,
                     ),
             ),

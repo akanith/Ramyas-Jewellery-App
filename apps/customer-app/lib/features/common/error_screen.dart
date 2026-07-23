@@ -17,7 +17,7 @@ class ErrorScreen extends StatelessWidget {
       appBar: CustomAppBar(
         title: 'Error',
         showBackButton: true,
-        onBackPressed: () => context.maybePop(),
+        onBackPressed: () => Navigator.of(context).maybePop(),
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 16),

@@ -51,6 +51,10 @@ class SupabaseSavingsRepository implements ISavingsRepository {
         final rawList = await _supabaseService.getInstallments(customerData['id'].toString());
         if (rawList.isNotEmpty) {
           return rawList.map((item) {
+            final stStr = item['status']?.toString().toUpperCase() ?? '';
+            final statusEnum = (stStr == 'PAID' || stStr == 'RECORDED')
+                ? InstallmentStatus.paid
+                : InstallmentStatus.waiting;
             return InstallmentModel(
               id: item['id']?.toString() ?? '#RJ-001',
               installmentNumber: (item['installment_number'] as num?)?.toInt() ?? 1,
@@ -59,7 +63,7 @@ class SupabaseSavingsRepository implements ISavingsRepository {
               date: item['date']?.toString() ?? '2023-09-15',
               paymentMethod: item['method']?.toString() ?? 'GPay',
               receiptNumber: item['id']?.toString() ?? '#RJ-8821',
-              status: item['status']?.toString() ?? 'RECORDED',
+              status: statusEnum,
             );
           }).toList();
         }
@@ -82,7 +86,7 @@ class SupabaseSavingsRepository implements ISavingsRepository {
     final scheme = await getSchemeSummary();
 
     return ReceiptModel(
-      receiptNumber: latest.receiptNumber,
+      receiptNumber: latest.receiptNumber ?? '#RJ-8821',
       transactionDate: '${latest.date} • 10:30 AM',
       customerName: 'Ananya Sharma',
       customerId: 'RJ-2023-441',
@@ -92,7 +96,7 @@ class SupabaseSavingsRepository implements ISavingsRepository {
       installmentNumber: latest.installmentNumber,
       totalInstallments: scheme.totalInstallmentsCount,
       amountPaid: latest.amount,
-      paymentMethod: latest.paymentMethod,
+      paymentMethod: latest.paymentMethod ?? 'GPay',
       accumulatedBalance: scheme.accumulatedTotal,
       shopBonusAccumulated: scheme.shopBonus,
       nextDueDate: scheme.nextDueDate,
@@ -137,7 +141,7 @@ class SupabaseSavingsRepository implements ISavingsRepository {
         date: '15 Sep 2024',
         paymentMethod: 'GPay / UPI',
         receiptNumber: '#RJ-8821',
-        status: 'PAID',
+        status: InstallmentStatus.paid,
       ),
       InstallmentModel(
         id: '2',
@@ -147,7 +151,7 @@ class SupabaseSavingsRepository implements ISavingsRepository {
         date: '12 Aug 2024',
         paymentMethod: 'Cash at Shop',
         receiptNumber: '#RJ-8712',
-        status: 'PAID',
+        status: InstallmentStatus.paid,
       ),
       InstallmentModel(
         id: '3',
@@ -157,7 +161,7 @@ class SupabaseSavingsRepository implements ISavingsRepository {
         date: '10 Jul 2024',
         paymentMethod: 'PhonePe',
         receiptNumber: '#RJ-8540',
-        status: 'PAID',
+        status: InstallmentStatus.paid,
       ),
     ];
   }

@@ -235,7 +235,7 @@ class HomeScreen extends ConsumerWidget {
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: AppColors.accent.withOpacity(0.2),
+                          color: AppColors.accent.withValues(alpha: 0.2),
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(
@@ -476,7 +476,8 @@ class HomeScreen extends ConsumerWidget {
         currentIndex: 0,
         onTap: (index) {
           if (index == 1) context.go('/passbook');
-          if (index == 2) context.go('/receipt');
+          if (index == 2) context.go('/notifications');
+          if (index == 3) context.go('/profile');
         },
       ),
     );

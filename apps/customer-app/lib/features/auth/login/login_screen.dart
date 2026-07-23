@@ -147,7 +147,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.15),
+                              color: Colors.white.withValues(alpha: 0.15),
                               shape: BoxShape.circle,
                             ),
                             child: const Icon(
@@ -335,7 +335,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               Text(
                                 AppConstants.defaultPasswordNotice,
                                 style: AppTextStyles.bodySmall.copyWith(
-                                  color: AppColors.textPrimary.withOpacity(0.85),
+                                  color: AppColors.textPrimary.withValues(alpha: 0.85),
                                   fontSize: 12,
                                 ),
                               ),

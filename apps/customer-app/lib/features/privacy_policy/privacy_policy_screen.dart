@@ -16,7 +16,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
       appBar: CustomAppBar(
         title: 'Privacy Policy',
         showBackButton: true,
-        onBackPressed: () => context.maybePop(),
+        onBackPressed: () => Navigator.of(context).maybePop(),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -62,7 +62,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
                     Row(
                       children: [
                         const Icon(
-                          Icons.database_outlined,
+                          Icons.storage_outlined,
                           color: AppColors.primary,
                           size: 22,
                         ),
@@ -264,7 +264,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
         onTap: (index) {
           if (index == 0) context.go('/home');
           if (index == 1) context.go('/passbook');
-          if (index == 2) context.go('/receipt');
+          if (index == 2) context.go('/notifications');
           if (index == 3) context.go('/profile');
         },
       ),
